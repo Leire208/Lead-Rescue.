@@ -1,0 +1,552 @@
+@import "tailwindcss";
+
+/* =========================================================
+   ROOT
+   ========================================================= */
+
+:root {
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  color-scheme: dark;
+
+  /* Brand accent */
+  --lr-accent: #8b7cff;
+  --lr-accent-soft: rgba(139, 124, 255, 0.12);
+  --lr-accent-strong: rgba(139, 124, 255, 0.22);
+
+  /* Workspace shape */
+  --lr-radius: 24px;
+
+  /* Page background */
+  --lr-background-overlay: transparent;
+}
+
+/* =========================================================
+   DARK THEME
+   ========================================================= */
+
+html[data-theme="dark"] {
+  --lr-bg: #050506;
+  --lr-bg-soft: #0b0b0d;
+
+  --lr-card: rgba(255, 255, 255, 0.045);
+  --lr-card-solid: #101012;
+  --lr-card-hover: rgba(255, 255, 255, 0.07);
+
+  --lr-border: rgba(255, 255, 255, 0.09);
+  --lr-border-strong: rgba(255, 255, 255, 0.14);
+
+  --lr-text: #f7f7f8;
+  --lr-text-secondary: #a1a1aa;
+  --lr-text-muted: #66666f;
+
+  color-scheme: dark;
+}
+
+/* =========================================================
+   LIGHT THEME
+   ========================================================= */
+
+html[data-theme="light"] {
+  --lr-bg: #f6f6f3;
+  --lr-bg-soft: #eeeeea;
+
+  --lr-card: rgba(255, 255, 255, 0.74);
+  --lr-card-solid: #ffffff;
+  --lr-card-hover: rgba(255, 255, 255, 0.94);
+
+  --lr-border: rgba(17, 17, 19, 0.08);
+  --lr-border-strong: rgba(17, 17, 19, 0.14);
+
+  --lr-text: #111113;
+  --lr-text-secondary: #68686f;
+  --lr-text-muted: #98989f;
+
+  color-scheme: light;
+}
+
+/* =========================================================
+   BASE
+   ========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: var(--lr-bg);
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+
+  background:
+    var(--lr-background-overlay),
+    var(--lr-bg);
+
+  color: var(--lr-text);
+
+  transition:
+    background-color 350ms ease,
+    color 250ms ease;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--lr-accent);
+  color: white;
+}
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.28);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.48);
+}
+
+/* =========================================================
+   SMOOTH UI
+   ========================================================= */
+
+* {
+  transition-property:
+    background-color,
+    border-color,
+    color,
+    box-shadow;
+
+  transition-duration: 250ms;
+  transition-timing-function: ease;
+}
+
+input,
+textarea,
+select {
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+/* =========================================================
+   PREMIUM GLASS
+   ========================================================= */
+
+.lr-glass {
+  background: var(--lr-card);
+  border: 1px solid var(--lr-border);
+
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* =========================================================
+   ACCENT UTILITIES
+   ========================================================= */
+
+.lr-accent {
+  color: var(--lr-accent);
+}
+
+.lr-accent-bg {
+  background: var(--lr-accent);
+}
+
+.lr-accent-soft {
+  background: var(--lr-accent-soft);
+}
+
+.lr-accent-border {
+  border-color: var(--lr-accent-strong);
+}
+
+/* =========================================================
+   VISUAL BACKGROUNDS
+   ========================================================= */
+
+/*
+   The ThemeContext sets:
+
+   data-theme
+   data-visual-theme
+   data-accent
+
+   The visual theme controls the atmosphere
+   of the entire workspace.
+*/
+
+/* ---------------------------------------------------------
+   MIDNIGHT
+   --------------------------------------------------------- */
+
+html[data-visual-theme="midnight"] {
+  --lr-background-overlay:
+    radial-gradient(
+      circle at 82% -5%,
+      var(--lr-accent-soft),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 10% 100%,
+      rgba(70, 70, 100, 0.025),
+      transparent 35%
+    );
+}
+
+html[data-theme="light"][data-visual-theme="midnight"] {
+  --lr-background-overlay:
+    radial-gradient(
+      circle at 82% -5%,
+      var(--lr-accent-soft),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 10% 100%,
+      rgba(90, 110, 150, 0.035),
+      transparent 35%
+    );
+}
+
+/* ---------------------------------------------------------
+   AURORA
+   --------------------------------------------------------- */
+
+html[data-visual-theme="aurora"] {
+  --lr-background-overlay:
+    radial-gradient(
+      circle at 12% 8%,
+      var(--lr-accent-soft),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 88% 12%,
+      rgba(70, 110, 255, 0.08),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 50% 105%,
+      rgba(160, 80, 255, 0.06),
+      transparent 36%
+    );
+}
+
+html[data-theme="light"][data-visual-theme="aurora"] {
+  --lr-background-overlay:
+    radial-gradient(
+      circle at 12% 8%,
+      var(--lr-accent-soft),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 88% 12%,
+      rgba(80, 120, 255, 0.06),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 50% 105%,
+      rgba(160, 90, 255, 0.035),
+      transparent 38%
+    );
+}
+
+/* ---------------------------------------------------------
+   OCEAN
+   --------------------------------------------------------- */
+
+html[data-visual-theme="ocean"] {
+  --lr-background-overlay:
+    radial-gradient(
+      circle at 15% 0%,
+      rgba(20, 190, 210, 0.09),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 90% 25%,
+      rgba(50, 100, 255, 0.08),
+      transparent 32%
+    ),
+    linear-gradient(
+      145deg,
+      rgba(0, 70, 90, 0.08),
+      transparent 55%
+    );
+}
+
+html[data-theme="light"][data-visual-theme="ocean"] {
+  --lr-background-overlay:
+    radial-gradient(
+      circle at 15% 0%,
+      rgba(20, 180, 210, 0.07),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 90% 25%,
+      rgba(60, 110, 255, 0.055),
+      transparent 34%
+    );
+}
+
+/* ---------------------------------------------------------
+   SUNSET
+   --------------------------------------------------------- */
+
+html[data-visual-theme="sunset"] {
+  --lr-background-overlay:
+    radial-gradient(
+      circle at 85% 0%,
+      rgba(255, 130, 80, 0.09),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 10% 20%,
+      rgba(230, 70, 130, 0.07),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 50% 100%,
+      rgba(255, 180, 70, 0.045),
+      transparent 38%
+    );
+}
+
+html[data-theme="light"][data-visual-theme="sunset"] {
+  --lr-background-overlay:
+    radial-gradient(
+      circle at 85% 0%,
+      rgba(255, 140, 90, 0.08),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 10% 20%,
+      rgba(235, 90, 140, 0.055),
+      transparent 34%
+    );
+}
+
+/* ---------------------------------------------------------
+   GRAPHITE
+   --------------------------------------------------------- */
+
+html[data-visual-theme="graphite"] {
+  --lr-background-overlay:
+    radial-gradient(
+      circle at 50% -10%,
+      rgba(255, 255, 255, 0.035),
+      transparent 38%
+    );
+}
+
+html[data-theme="light"][data-visual-theme="graphite"] {
+  --lr-background-overlay:
+    radial-gradient(
+      circle at 50% -10%,
+      rgba(80, 80, 90, 0.035),
+      transparent 40%
+    );
+}
+
+/* ---------------------------------------------------------
+   PAPER
+   --------------------------------------------------------- */
+
+html[data-visual-theme="paper"] {
+  --lr-background-overlay:
+    radial-gradient(
+      circle at 80% 0%,
+      var(--lr-accent-soft),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 0% 100%,
+      rgba(120, 120, 120, 0.025),
+      transparent 38%
+    );
+}
+
+/* =========================================================
+   BACKGROUND DEPTH
+   ========================================================= */
+
+body::before {
+  content: "";
+  position: fixed;
+
+  inset: 0;
+
+  pointer-events: none;
+
+  z-index: -1;
+
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 35%,
+      rgba(0, 0, 0, 0.015)
+    );
+}
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
+.lr-grid {
+  background-image:
+    linear-gradient(
+      rgba(255, 255, 255, 0.035) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.035) 1px,
+      transparent 1px
+    );
+
+  background-size: 64px 64px;
+}
+
+html[data-theme="light"] .lr-grid {
+  background-image:
+    linear-gradient(
+      rgba(17, 17, 19, 0.035) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(17, 17, 19, 0.035) 1px,
+      transparent 1px
+    );
+}
+
+/* =========================================================
+   BRAND STYLE
+   ========================================================= */
+
+html[data-brand-style="premium"] {
+  --lr-radius: 24px;
+}
+
+html[data-brand-style="minimal"] {
+  --lr-radius: 18px;
+}
+
+html[data-brand-style="bold"] {
+  --lr-radius: 20px;
+}
+
+/* =========================================================
+   CUSTOM ACCENT COLOR
+   ========================================================= */
+
+html[data-accent="violet"] {
+  --lr-accent: #8b7cff;
+  --lr-accent-soft: rgba(139, 124, 255, 0.12);
+  --lr-accent-strong: rgba(139, 124, 255, 0.22);
+}
+
+html[data-accent="blue"] {
+  --lr-accent: #4f8cff;
+  --lr-accent-soft: rgba(79, 140, 255, 0.12);
+  --lr-accent-strong: rgba(79, 140, 255, 0.22);
+}
+
+html[data-accent="cyan"] {
+  --lr-accent: #22c7d6;
+  --lr-accent-soft: rgba(34, 199, 214, 0.12);
+  --lr-accent-strong: rgba(34, 199, 214, 0.22);
+}
+
+html[data-accent="green"] {
+  --lr-accent: #35c98a;
+  --lr-accent-soft: rgba(53, 201, 138, 0.12);
+  --lr-accent-strong: rgba(53, 201, 138, 0.22);
+}
+
+html[data-accent="orange"] {
+  --lr-accent: #ff9d5c;
+  --lr-accent-soft: rgba(255, 157, 92, 0.12);
+  --lr-accent-strong: rgba(255, 157, 92, 0.22);
+}
+
+html[data-accent="pink"] {
+  --lr-accent: #ed76b9;
+  --lr-accent-soft: rgba(237, 118, 185, 0.12);
+  --lr-accent-strong: rgba(237, 118, 185, 0.22);
+}
+
+/* =========================================================
+   MOBILE / SMALL SCREENS
+   ========================================================= */
+
+@media (max-width: 640px) {
+  body {
+    background:
+      var(--lr-background-overlay),
+      var(--lr-bg);
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
