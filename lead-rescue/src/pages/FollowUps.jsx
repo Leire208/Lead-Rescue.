@@ -69,9 +69,19 @@ function getInitials(name = "") {
 
 function FollowUps() {
   const navigate = useNavigate();
-  const { leads, updateLead } = useLeads();
+
+  const {
+    leads,
+    updateLead,
+    isDemo,
+  } = useLeads();
 
   const [filter, setFilter] = useState("pending");
+
+  const basePath = isDemo ? "/demo" : "/app";
+
+  const leadsPath = `${basePath}/leads`;
+  const messagesPath = `${basePath}/messages`;
 
   const followUps = useMemo(() => {
     return leads
@@ -127,7 +137,8 @@ function FollowUps() {
             lead.nextFollowUp < today
         )
         .reduce(
-          (total, lead) => total + Number(lead.value || 0),
+          (total, lead) =>
+            total + Number(lead.value || 0),
           0
         ),
     [followUps, today]
@@ -184,13 +195,19 @@ function FollowUps() {
   return (
     <Layout>
       <div className="space-y-7">
+
         {/* HERO */}
+
         <section className="relative overflow-hidden rounded-[28px] border border-[var(--lr-border)] bg-[var(--lr-card)] p-6 shadow-[0_20px_80px_rgba(0,0,0,0.06)] sm:p-8">
+
           <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[var(--lr-accent)]/10 blur-3xl" />
 
           <div className="relative">
+
             <div className="flex flex-wrap items-center justify-between gap-4">
+
               <div>
+
                 <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--lr-accent)]">
                   <Clock3 size={14} />
                   Follow-up engine
@@ -206,19 +223,22 @@ function FollowUps() {
                   por prioridad para que sepas exactamente
                   a quién contactar y cuándo.
                 </p>
+
               </div>
 
               <button
                 type="button"
-                onClick={() => navigate("/app/leads")}
+                onClick={() => navigate(leadsPath)}
                 className="inline-flex h-10 items-center gap-2 rounded-xl bg-[var(--lr-text)] px-4 text-xs font-bold text-[var(--lr-bg)] shadow-lg shadow-black/10 transition hover:-translate-y-0.5"
               >
                 <Plus size={15} strokeWidth={2.5} />
                 Añadir lead
               </button>
+
             </div>
 
             <div className="mt-7 flex flex-wrap items-end gap-8">
+
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--lr-text-muted)]">
                   Dinero en riesgo
@@ -250,12 +270,17 @@ function FollowUps() {
                 />
                 Prioriza antes de perderlos
               </div>
+
             </div>
+
           </div>
+
         </section>
 
         {/* SUMMARY */}
+
         <section className="grid gap-3 sm:grid-cols-3">
+
           <SummaryCard
             label="Atrasados"
             description="Necesitan atención"
@@ -285,16 +310,21 @@ function FollowUps() {
             tone="neutral"
             onClick={() => setFilter("upcoming")}
           />
+
         </section>
 
         {/* FILTER */}
+
         <div className="flex flex-wrap items-center justify-between gap-3">
+
           <div className="flex items-center gap-2">
+
             <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--lr-border)] bg-[var(--lr-card)] text-[var(--lr-text-secondary)]">
               <Filter size={14} />
             </div>
 
             <div>
+
               <p className="text-xs font-bold text-[var(--lr-text)]">
                 {filter === "pending"
                   ? "Todos los pendientes"
@@ -311,7 +341,9 @@ function FollowUps() {
                   ? "oportunidad"
                   : "oportunidades"}
               </p>
+
             </div>
+
           </div>
 
           {filter !== "pending" && (
@@ -323,12 +355,17 @@ function FollowUps() {
               Ver todos
             </button>
           )}
+
         </div>
 
         {/* LIST */}
+
         {filteredFollowUps.length > 0 ? (
+
           <section className="space-y-3">
+
             {filteredFollowUps.map((lead) => {
+
               const days = getDaysDifference(
                 lead.nextFollowUp
               );
@@ -337,6 +374,7 @@ function FollowUps() {
               const isToday = days === 0;
 
               return (
+
                 <article
                   key={lead.id}
                   className={[
@@ -349,6 +387,7 @@ function FollowUps() {
                         : "border-[var(--lr-border)]",
                   ].join(" ")}
                 >
+
                   {isOverdue && (
                     <div className="absolute left-0 top-0 h-full w-0.5 bg-red-500" />
                   )}
@@ -358,8 +397,11 @@ function FollowUps() {
                   )}
 
                   <div className="flex flex-col gap-5 xl:flex-row xl:items-center">
+
                     {/* LEAD */}
+
                     <div className="flex min-w-0 flex-1 items-center gap-4">
+
                       <div
                         className={[
                           "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-xs font-black",
@@ -374,7 +416,9 @@ function FollowUps() {
                       </div>
 
                       <div className="min-w-0">
+
                         <div className="flex flex-wrap items-center gap-2">
+
                           <h3 className="truncate text-sm font-bold text-[var(--lr-text)]">
                             {lead.name}
                           </h3>
@@ -391,6 +435,7 @@ function FollowUps() {
                               ? "Presupuesto"
                               : "Seguimiento"}
                           </span>
+
                         </div>
 
                         <p className="mt-1 truncate text-xs text-[var(--lr-text-secondary)]">
@@ -401,6 +446,7 @@ function FollowUps() {
                         </p>
 
                         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+
                           <span className="text-[10px] text-[var(--lr-text-muted)]">
                             Último contacto:{" "}
                             {formatDate(lead.lastContact)}
@@ -409,12 +455,17 @@ function FollowUps() {
                           <span className="text-[11px] font-bold text-[var(--lr-text)]">
                             {formatCurrency(lead.value)}
                           </span>
+
                         </div>
+
                       </div>
+
                     </div>
 
                     {/* PRIORITY */}
+
                     <div className="flex items-center gap-3 xl:w-[190px]">
+
                       <div
                         className={[
                           "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
@@ -435,6 +486,7 @@ function FollowUps() {
                       </div>
 
                       <div>
+
                         <p
                           className={[
                             "text-xs font-bold",
@@ -463,15 +515,19 @@ function FollowUps() {
                         <p className="mt-0.5 text-[10px] text-[var(--lr-text-muted)]">
                           {formatDate(lead.nextFollowUp)}
                         </p>
+
                       </div>
+
                     </div>
 
                     {/* ACTIONS */}
+
                     <div className="flex flex-wrap gap-2 xl:justify-end">
+
                       <button
                         type="button"
                         onClick={() =>
-                          navigate("/app/messages", {
+                          navigate(messagesPath, {
                             state: {
                               leadId: lead.id,
                             },
@@ -512,13 +568,19 @@ function FollowUps() {
                       >
                         <MoreHorizontal size={16} />
                       </button>
+
                     </div>
+
                   </div>
+
                 </article>
               );
             })}
+
           </section>
+
         ) : (
+
           <EmptyState
             title={
               followUps.length === 0
@@ -535,20 +597,25 @@ function FollowUps() {
                 ? "Ver mis leads"
                 : undefined
             }
-            onAction={() => navigate("/app/leads")}
+            onAction={() => navigate(leadsPath)}
           />
+
         )}
 
         {/* EXPLANATION */}
+
         <section className="relative overflow-hidden rounded-2xl border border-[var(--lr-border)] bg-[var(--lr-bg-soft)] p-5 sm:p-6">
+
           <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full bg-[var(--lr-accent)]/5 blur-3xl" />
 
           <div className="relative flex gap-4">
+
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--lr-border)] bg-[var(--lr-card)] text-[var(--lr-accent)]">
               <ArrowRight size={17} />
             </div>
 
             <div>
+
               <h3 className="text-sm font-bold text-[var(--lr-text)]">
                 El objetivo no es guardar leads.
               </h3>
@@ -559,9 +626,13 @@ function FollowUps() {
                 Rescue te muestra primero a quién contactar
                 y después te ayuda con el mensaje.
               </p>
+
             </div>
+
           </div>
+
         </section>
+
       </div>
     </Layout>
   );
@@ -595,7 +666,9 @@ function SummaryCard({
           : "border-[var(--lr-border)] bg-[var(--lr-card)] hover:-translate-y-0.5 hover:border-[var(--lr-border-strong)] hover:shadow-lg hover:shadow-black/5",
       ].join(" ")}
     >
+
       <div className="flex items-start justify-between gap-4">
+
         <div
           className={[
             "flex h-10 w-10 items-center justify-center rounded-xl",
@@ -617,9 +690,11 @@ function SummaryCard({
         >
           {value}
         </span>
+
       </div>
 
       <div className="mt-5">
+
         <p
           className={[
             "text-xs font-bold",
@@ -641,7 +716,9 @@ function SummaryCard({
         >
           {description}
         </p>
+
       </div>
+
     </button>
   );
 }

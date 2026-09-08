@@ -21,21 +21,31 @@ function createId() {
     .slice(2, 9)}`;
 }
 
-function LeadProvider({ children }) {
+function LeadProvider({ children, demoMode = false }) {
   const [leads, setLeads] = useState(() => {
+    if (demoMode) {
+      return demoLeads;
+    }
+
     const stored = getStoredLeads();
 
-    return stored ?? demoLeads;
+    return stored ?? [];
   });
 
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (demoMode) {
+      return;
+    }
+
     saveLeads(leads);
-  }, [leads]);
+  }, [leads, demoMode]);
 
   const addLead = useCallback((leadData) => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date()
+      .toISOString()
+      .split("T")[0];
 
     const newLead = {
       id: createId(),
@@ -46,44 +56,57 @@ function LeadProvider({ children }) {
       status: leadData.status || "new",
       source: leadData.source || "Otro",
       lastContact: leadData.lastContact || today,
-      nextFollowUp: leadData.nextFollowUp || today,
+      nextFollowUp:
+        leadData.nextFollowUp || today,
       email: leadData.email?.trim() || "",
       phone: leadData.phone?.trim() || "",
       notes: leadData.notes?.trim() || "",
       createdAt: today,
     };
 
-    setLeads((current) => [newLead, ...current]);
+    setLeads((current) => [
+      newLead,
+      ...current,
+    ]);
 
     return newLead;
   }, []);
 
-  const updateLead = useCallback((id, updates) => {
-    setLeads((current) =>
-      current.map((lead) =>
-        lead.id === id
-          ? {
-              ...lead,
-              ...updates,
-              value:
-                updates.value !== undefined
-                  ? Number(updates.value) || 0
-                  : lead.value,
-            }
-          : lead
-      )
-    );
-  }, []);
+  const updateLead = useCallback(
+    (id, updates) => {
+      setLeads((current) =>
+        current.map((lead) =>
+          lead.id === id
+            ? {
+                ...lead,
+                ...updates,
+                value:
+                  updates.value !== undefined
+                    ? Number(updates.value) || 0
+                    : lead.value,
+              }
+            : lead
+        )
+      );
+    },
+    []
+  );
 
   const deleteLead = useCallback((id) => {
     setLeads((current) =>
-      current.filter((lead) => lead.id !== id)
+      current.filter(
+        (lead) => lead.id !== id
+      )
     );
   }, []);
 
   const getLead = useCallback(
     (id) => {
-      return leads.find((lead) => lead.id === id) || null;
+      return (
+        leads.find(
+          (lead) => lead.id === id
+        ) || null
+      );
     },
     [leads]
   );
@@ -117,26 +140,35 @@ function LeadProvider({ children }) {
     ).length;
 
     const pipelineValue = leads
-      .filter((lead) => lead.status !== "lost")
+      .filter(
+        (lead) => lead.status !== "lost"
+      )
       .reduce(
         (totalValue, lead) =>
-          totalValue + Number(lead.value || 0),
+          totalValue +
+          Number(lead.value || 0),
         0
       );
 
     const wonValue = leads
-      .filter((lead) => lead.status === "won")
+      .filter(
+        (lead) => lead.status === "won"
+      )
       .reduce(
         (totalValue, lead) =>
-          totalValue + Number(lead.value || 0),
+          totalValue +
+          Number(lead.value || 0),
         0
       );
 
     const lostValue = leads
-      .filter((lead) => lead.status === "lost")
+      .filter(
+        (lead) => lead.status === "lost"
+      )
       .reduce(
         (totalValue, lead) =>
-          totalValue + Number(lead.value || 0),
+          totalValue +
+          Number(lead.value || 0),
         0
       );
 
@@ -144,7 +176,8 @@ function LeadProvider({ children }) {
       total > 0
         ? Math.round(
             (leads.filter(
-              (lead) => lead.status === "won"
+              (lead) =>
+                lead.status === "won"
             ).length /
               total) *
               100
@@ -173,6 +206,7 @@ function LeadProvider({ children }) {
       getLead,
       resetDemoData,
       clearAllLeads,
+      isDemo: demoMode,
     }),
     [
       leads,
@@ -184,6 +218,7 @@ function LeadProvider({ children }) {
       getLead,
       resetDemoData,
       clearAllLeads,
+      demoMode,
     ]
   );
 

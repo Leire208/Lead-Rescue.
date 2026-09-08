@@ -1,4 +1,9 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import {
+  Navigate,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -10,12 +15,17 @@ function ProtectedRoute() {
   } = useAuth();
 
   const location = useLocation();
+  const navigate = useNavigate();
 
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-sm text-white/60">
-          Cargando Lead Rescue...
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+
+          <p className="text-sm text-white/60">
+            Cargando Lead Rescue...
+          </p>
         </div>
       </div>
     );
@@ -26,7 +36,9 @@ function ProtectedRoute() {
       <Navigate
         to="/login"
         replace
-        state={{ from: location.pathname }}
+        state={{
+          from: location.pathname,
+        }}
       />
     );
   }
@@ -46,7 +58,9 @@ function ProtectedRoute() {
 
           <button
             onClick={() => {
-              window.location.href = "/login";
+              navigate("/login", {
+                replace: true,
+              });
             }}
             className="w-full rounded-2xl bg-white text-black py-3.5 text-sm font-semibold hover:bg-white/90 transition"
           >

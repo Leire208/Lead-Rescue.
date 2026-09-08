@@ -1,8 +1,6 @@
 import {
   BarChart3,
   Calculator,
-  ChevronLeft,
-  ChevronRight,
   ClipboardList,
   LayoutDashboard,
   LogOut,
@@ -10,18 +8,29 @@ import {
   Settings,
   Users,
 } from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
+
+import {
+  NavLink,
+  useNavigate,
+} from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../context/ThemeContext";
+import { useLeads } from "../context/LeadContext";
 
 function Sidebar() {
   const navigate = useNavigate();
 
-  const { logout, profile, user } = useAuth();
+  const {
+    logout,
+    profile,
+    user,
+  } = useAuth();
+
   const { t } = useLanguage();
   const { theme } = useTheme();
+  const { isDemo } = useLeads();
 
   const isDark = theme === "dark";
 
@@ -29,43 +38,63 @@ function Sidebar() {
     {
       label: t.nav.dashboard,
       icon: LayoutDashboard,
-      path: "/app",
+      path: isDemo ? "/demo" : "/app",
       end: true,
     },
     {
       label: t.nav.leads,
       icon: Users,
-      path: "/app/leads",
+      path: isDemo ? "/demo/leads" : "/app/leads",
     },
     {
       label: t.nav.followUps,
       icon: ClipboardList,
-      path: "/app/follow-ups",
+      path: isDemo
+        ? "/demo/follow-ups"
+        : "/app/follow-ups",
     },
     {
       label: t.nav.messages,
       icon: MessageSquare,
-      path: "/app/messages",
+      path: isDemo
+        ? "/demo/messages"
+        : "/app/messages",
     },
     {
       label: t.nav.calculator,
       icon: Calculator,
-      path: "/app/calculator",
+      path: isDemo
+        ? "/demo/calculator"
+        : "/app/calculator",
     },
     {
       label: t.nav.settings,
       icon: Settings,
-      path: "/app/settings",
+      path: isDemo
+        ? "/demo/settings"
+        : "/app/settings",
     },
   ];
 
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("/login", { replace: true });
+
+      navigate("/login", {
+        replace: true,
+      });
     } catch (error) {
-      console.error("Error cerrando sesión:", error);
+      console.error(
+        "Error cerrando sesión:",
+        error
+      );
     }
+  };
+
+  const handleExitDemo = () => {
+    navigate("/", {
+      replace: true,
+    });
   };
 
   return (
@@ -82,7 +111,9 @@ function Sidebar() {
         <div className="flex h-[86px] items-center px-6">
           <button
             type="button"
-            onClick={() => navigate("/app")}
+            onClick={() =>
+              navigate(isDemo ? "/demo" : "/app")
+            }
             className="flex items-center gap-3 text-left"
           >
             <div
@@ -109,11 +140,32 @@ function Sidebar() {
                     : "text-black/40"
                 }`}
               >
-                {t.common.workspace}
+                {isDemo
+                  ? "DEMO · Datos de ejemplo"
+                  : t.common.workspace}
               </div>
             </div>
           </button>
         </div>
+
+        {/* DEMO BADGE */}
+        {isDemo && (
+          <div className="px-4 pb-2">
+            <div className="rounded-xl border border-[var(--lr-accent)]/20 bg-[var(--lr-accent-soft)] px-3 py-2">
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--lr-accent)]" />
+
+                <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--lr-accent)]">
+                  Demo
+                </span>
+              </div>
+
+              <p className="mt-1 text-[9px] leading-4 text-[var(--lr-text-muted)]">
+                Datos ficticios para probar Lead Rescue.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* NAVIGATION */}
         <nav className="flex-1 px-4 py-5">
@@ -188,7 +240,9 @@ function Sidebar() {
 
               <div className="min-w-0">
                 <div className="truncate text-[13px] font-medium">
-                  {profile?.role === "admin"
+                  {isDemo
+                    ? "Demo workspace"
+                    : profile?.role === "admin"
                     ? "Admin workspace"
                     : t.common.freeWorkspace}
                 </div>
@@ -200,14 +254,16 @@ function Sidebar() {
                       : "text-black/35"
                   }`}
                 >
-                  {user?.email || "Workspace"}
+                  {isDemo
+                    ? "Datos de ejemplo"
+                    : user?.email || "Workspace"}
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* LOGOUT */}
+        {/* LOGOUT / EXIT DEMO */}
         <div
           className={`border-t p-4 ${
             isDark
@@ -215,26 +271,47 @@ function Sidebar() {
               : "border-black/[0.07]"
           }`}
         >
-          <button
-            type="button"
-            onClick={handleLogout}
-            className={`flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-[14px] font-medium transition ${
-              isDark
-                ? "text-white/45 hover:bg-white/[0.05] hover:text-white"
-                : "text-black/45 hover:bg-black/[0.04] hover:text-black"
-            }`}
-          >
-            <LogOut
-              size={18}
-              strokeWidth={1.8}
-            />
+          {isDemo ? (
+            <button
+              type="button"
+              onClick={handleExitDemo}
+              className={`flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-[14px] font-medium transition ${
+                isDark
+                  ? "text-white/45 hover:bg-white/[0.05] hover:text-white"
+                  : "text-black/45 hover:bg-black/[0.04] hover:text-black"
+              }`}
+            >
+              <LogOut
+                size={18}
+                strokeWidth={1.8}
+              />
 
-            <span>
-              {t.nav.settings === "Settings"
-                ? "Log out"
-                : "Cerrar sesión"}
-            </span>
-          </button>
+              <span>
+                Salir de la demo
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className={`flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-[14px] font-medium transition ${
+                isDark
+                  ? "text-white/45 hover:bg-white/[0.05] hover:text-white"
+                  : "text-black/45 hover:bg-black/[0.04] hover:text-black"
+              }`}
+            >
+              <LogOut
+                size={18}
+                strokeWidth={1.8}
+              />
+
+              <span>
+                {t.nav.settings === "Settings"
+                  ? "Log out"
+                  : "Cerrar sesión"}
+              </span>
+            </button>
+          )}
         </div>
       </aside>
 

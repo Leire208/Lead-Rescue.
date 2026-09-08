@@ -79,8 +79,29 @@ function formatDate(date, language) {
 
 function Dashboard() {
   const navigate = useNavigate();
-  const { leads, stats } = useLeads();
+
+  const {
+    leads,
+    stats,
+    isDemo,
+  } = useLeads();
+
   const { t, language } = useLanguage();
+
+  /*
+   * Demo:
+   * /demo
+   * /demo/leads
+   * /demo/follow-ups
+   * /demo/messages
+   *
+   * App real:
+   * /app
+   * /app/leads
+   * /app/follow-ups
+   * /app/messages
+   */
+  const basePath = isDemo ? "/demo" : "/app";
 
   const today = getToday();
 
@@ -214,7 +235,7 @@ function Dashboard() {
                 <button
                   type="button"
                   onClick={() =>
-                    navigate("/app/leads")
+                    navigate(`${basePath}/leads`)
                   }
                   className="group flex h-10 items-center gap-2 rounded-xl bg-[var(--lr-text)] px-4 text-xs font-bold text-[var(--lr-bg)] hover:opacity-90"
                 >
@@ -231,7 +252,7 @@ function Dashboard() {
                 <button
                   type="button"
                   onClick={() =>
-                    navigate("/app/follow-ups")
+                    navigate(`${basePath}/follow-ups`)
                   }
                   className="flex h-10 items-center gap-2 rounded-xl border border-[var(--lr-border)] bg-[var(--lr-card)] px-4 text-xs font-semibold text-[var(--lr-text-secondary)] hover:bg-[var(--lr-card-hover)] hover:text-[var(--lr-text)]"
                 >
@@ -375,7 +396,7 @@ function Dashboard() {
               <button
                 type="button"
                 onClick={() =>
-                  navigate("/app/follow-ups")
+                  navigate(`${basePath}/follow-ups`)
                 }
                 className="text-[10px] font-bold text-[var(--lr-accent)] hover:opacity-80"
               >
@@ -464,7 +485,7 @@ function Dashboard() {
                         type="button"
                         onClick={() =>
                           navigate(
-                            "/app/messages",
+                            `${basePath}/messages`,
                             {
                               state: {
                                 leadId: lead.id,
@@ -547,7 +568,7 @@ function Dashboard() {
                       key={lead.id}
                       type="button"
                       onClick={() =>
-                        navigate("/app/leads")
+                        navigate(`${basePath}/leads`)
                       }
                       className="flex w-full items-center gap-3 rounded-xl p-3 text-left hover:bg-[var(--lr-card)]"
                     >
@@ -621,7 +642,7 @@ function Dashboard() {
               <button
                 type="button"
                 onClick={() =>
-                  navigate("/app/leads")
+                  navigate(`${basePath}/leads`)
                 }
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--lr-bg-soft)] py-2.5 text-[10px] font-bold text-[var(--lr-text-secondary)] hover:bg-[var(--lr-card-hover)] hover:text-[var(--lr-text)]"
               >

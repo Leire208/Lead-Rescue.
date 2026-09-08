@@ -5,11 +5,11 @@ import {
   Routes,
 } from "react-router-dom";
 
-import LeadProvider from "./context/LeadContext";
 import ThemeProvider from "./context/ThemeContext";
 import LanguageProvider from "./context/LanguageContext";
 import WorkspaceProvider from "./context/WorkspaceContext";
 import AuthProvider from "./context/AuthContext";
+import LeadProvider from "./context/LeadContext";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -21,6 +21,93 @@ import FollowUps from "./pages/FollowUps";
 import Messages from "./pages/Messages";
 import Calculator from "./pages/Calculator";
 import Settings from "./pages/Settings";
+import Demo from "./pages/Demo";
+
+function DemoLayout() {
+  return (
+    <LeadProvider demoMode={true}>
+      <Routes>
+        <Route
+          path="/"
+          element={<Demo />}
+        />
+
+        <Route
+          path="/leads"
+          element={<Leads />}
+        />
+
+        <Route
+          path="/follow-ups"
+          element={<FollowUps />}
+        />
+
+        <Route
+          path="/messages"
+          element={<Messages />}
+        />
+
+        <Route
+          path="/calculator"
+          element={<Calculator />}
+        />
+
+        <Route
+          path="/settings"
+          element={<Settings />}
+        />
+
+        <Route
+          path="*"
+          element={<Navigate to="/demo" replace />}
+        />
+      </Routes>
+    </LeadProvider>
+  );
+}
+
+function AppLayout() {
+  return (
+    <LeadProvider demoMode={false}>
+      <Routes>
+        <Route
+          path="/"
+          element={<Dashboard />}
+        />
+
+        <Route
+          path="/leads"
+          element={<Leads />}
+        />
+
+        <Route
+          path="/follow-ups"
+          element={<FollowUps />}
+        />
+
+        <Route
+          path="/messages"
+          element={<Messages />}
+        />
+
+        <Route
+          path="/calculator"
+          element={<Calculator />}
+        />
+
+        <Route
+          path="/settings"
+          element={<Settings />}
+        />
+
+        <Route
+          path="*"
+          element={<Navigate to="/app" replace />}
+        />
+      </Routes>
+    </LeadProvider>
+  );
+}
 
 function App() {
   return (
@@ -28,69 +115,59 @@ function App() {
       <LanguageProvider>
         <AuthProvider>
           <WorkspaceProvider>
-            <LeadProvider>
-              <BrowserRouter>
-                <Routes>
-                  {/* PÁGINAS PÚBLICAS */}
+            <BrowserRouter>
+              <Routes>
 
+                {/* =========================
+                    LANDING
+                ========================= */}
+                <Route
+                  path="/"
+                  element={<Landing />}
+                />
+
+                {/* =========================
+                    DEMO PÚBLICA
+                ========================= */}
+                <Route
+                  path="/demo/*"
+                  element={<DemoLayout />}
+                />
+
+                {/* =========================
+                    LOGIN
+                ========================= */}
+                <Route
+                  path="/login"
+                  element={<Login />}
+                />
+
+                {/* =========================
+                    APP REAL
+                    TODO PROTEGIDO
+                ========================= */}
+                <Route element={<ProtectedRoute />}>
                   <Route
-                    path="/"
-                    element={<Landing />}
+                    path="/app/*"
+                    element={<AppLayout />}
                   />
+                </Route>
 
-                  <Route
-                    path="/login"
-                    element={<Login />}
-                  />
-
-                  {/* APLICACIÓN PRIVADA */}
-
-                  <Route element={<ProtectedRoute />}>
-                    <Route
-                      path="/app"
-                      element={<Dashboard />}
+                {/* =========================
+                    UNKNOWN ROUTES
+                ========================= */}
+                <Route
+                  path="*"
+                  element={
+                    <Navigate
+                      to="/"
+                      replace
                     />
+                  }
+                />
 
-                    <Route
-                      path="/app/leads"
-                      element={<Leads />}
-                    />
-
-                    <Route
-                      path="/app/follow-ups"
-                      element={<FollowUps />}
-                    />
-
-                    <Route
-                      path="/app/messages"
-                      element={<Messages />}
-                    />
-
-                    <Route
-                      path="/app/calculator"
-                      element={<Calculator />}
-                    />
-
-                    <Route
-                      path="/app/settings"
-                      element={<Settings />}
-                    />
-                  </Route>
-
-                  {/* RUTA DESCONOCIDA */}
-
-                  <Route
-                    path="*"
-                    element={
-                      <Navigate
-                        to="/"
-                        replace
-                      />
-                    }
-                  />
-                </Routes>
-              </BrowserRouter>
-            </LeadProvider>
+              </Routes>
+            </BrowserRouter>
           </WorkspaceProvider>
         </AuthProvider>
       </LanguageProvider>

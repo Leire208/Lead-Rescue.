@@ -25,9 +25,11 @@ function getInitials(name = "") {
 }
 
 function Messages() {
-  const { leads } = useLeads();
+  const { leads, isDemo } = useLeads();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const basePath = isDemo ? "/demo" : "/app";
 
   const [selectedLeadId, setSelectedLeadId] = useState(
     location.state?.leadId || leads[0]?.id || ""
@@ -609,7 +611,7 @@ function Messages() {
               <button
                 type="button"
                 onClick={() =>
-                  navigate("/app/leads")
+                  navigate(`${basePath}/leads`)
                 }
                 className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[var(--lr-text)] px-4 text-xs font-bold text-[var(--lr-bg)]"
               >

@@ -16,6 +16,7 @@ import {
   Trash2,
   Upload,
   X,
+  LifeBuoy,
 } from "lucide-react";
 
 import Layout from "../components/Layout";
@@ -24,6 +25,12 @@ import useTheme from "../context/useTheme";
 
 const SETTINGS_KEY =
   "lead-rescue-settings";
+
+const WHOP_PRO_URL =
+  "https://whop.com/checkout/plan_cGBN1dOfHwI45";
+
+const SUPPORT_EMAIL =
+  "ldmascaromoreno@gmail.com";
 
 const defaultSettings = {
   businessName: "Mi negocio",
@@ -152,6 +159,7 @@ function Settings() {
     leads,
     resetDemoData,
     clearAllLeads,
+    isDemo,
   } = useLeads();
 
   const {
@@ -251,6 +259,8 @@ function Settings() {
   };
 
   const handleReset = () => {
+    if (!isDemo) return;
+
     const confirmed =
       window.confirm(
         "¿Quieres restaurar los datos de demostración? Los leads actuales serán sustituidos."
@@ -892,13 +902,60 @@ function Settings() {
                 Free
               </span>
 
-              <button
-                type="button"
+              <a
+                href={WHOP_PRO_URL}
+                target="_blank"
+                rel="noreferrer"
                 className="hidden h-9 items-center rounded-xl bg-[var(--lr-text)] px-3.5 text-[10px] font-bold text-[var(--lr-bg)] hover:opacity-90 sm:flex"
               >
                 Ver Pro
-              </button>
+              </a>
             </div>
+          </div>
+        </section>
+
+        {/* SUPPORT */}
+
+        <section className="overflow-hidden rounded-[24px] border border-[var(--lr-border)] bg-[var(--lr-card)]">
+          <SectionHeader
+            icon={LifeBuoy}
+            title="Soporte"
+            description="Estamos aquí para ayudarte si tienes cualquier problema."
+          />
+
+          <div className="p-5 sm:p-6">
+            <div className="flex flex-col gap-4 rounded-2xl border border-[var(--lr-border)] bg-[var(--lr-bg-soft)] p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--lr-accent-soft)] text-[var(--lr-accent)]">
+                  <LifeBuoy size={17} />
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold text-[var(--lr-text)]">
+                    ¿Necesitas ayuda?
+                  </p>
+
+                  <p className="mt-1 max-w-xl text-[10px] leading-5 text-[var(--lr-text-muted)]">
+                    Si tienes cualquier problema con
+                    Lead Rescue, contacta con nuestro
+                    soporte y te ayudaremos lo antes
+                    posible.
+                  </p>
+                </div>
+              </div>
+
+              <a
+                href={`mailto:${SUPPORT_EMAIL}`}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[var(--lr-text)] px-4 text-xs font-bold text-[var(--lr-bg)] transition hover:-translate-y-0.5 hover:opacity-90"
+              >
+                <Mail size={14} />
+                Contactar soporte
+              </a>
+            </div>
+
+            <p className="mt-3 text-center text-[10px] text-[var(--lr-text-muted)] sm:text-left">
+              {SUPPORT_EMAIL}
+            </p>
           </div>
         </section>
 
@@ -962,19 +1019,21 @@ function Settings() {
                 </div>
 
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <button
-                    type="button"
-                    onClick={
-                      handleReset
-                    }
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--lr-border)] bg-[var(--lr-card)] px-4 text-xs font-bold text-[var(--lr-text-secondary)] hover:bg-[var(--lr-bg-soft)] hover:text-[var(--lr-text)]"
-                  >
-                    <RotateCcw
-                      size={14}
-                    />
+                  {isDemo && (
+                    <button
+                      type="button"
+                      onClick={
+                        handleReset
+                      }
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--lr-border)] bg-[var(--lr-card)] px-4 text-xs font-bold text-[var(--lr-text-secondary)] hover:bg-[var(--lr-bg-soft)] hover:text-[var(--lr-text)]"
+                    >
+                      <RotateCcw
+                        size={14}
+                      />
 
-                    Restaurar demo
-                  </button>
+                      Restaurar demo
+                    </button>
+                  )}
 
                   <button
                     type="button"

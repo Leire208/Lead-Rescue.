@@ -1,95 +1,86 @@
+import { useMemo, useState } from "react";
 import {
   ArrowDownUp,
-  ArrowRight,
-  BriefcaseBusiness,
+  Building2,
   CalendarDays,
   Check,
   ChevronDown,
   CircleDollarSign,
   Clock3,
+  Edit3,
   Filter,
   Mail,
-  MessageCircle,
-  Pencil,
+  MoreHorizontal,
   Phone,
   Plus,
   Search,
   Trash2,
-  UserRound,
+  User,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
 
 import Layout from "../components/Layout";
 import { useLeads } from "../context/LeadContext";
 import { useLanguage } from "../context/LanguageContext";
 
-const STATUS_VALUES = [
-  "new",
-  "contacted",
-  "proposal",
-  "follow-up",
-  "won",
-  "lost",
+const STATUS_OPTIONS = [
+  {
+    value: "new",
+    label: "Nuevo",
+  },
+  {
+    value: "contacted",
+    label: "Contactado",
+  },
+  {
+    value: "follow-up",
+    label: "Follow-up",
+  },
+  {
+    value: "proposal",
+    label: "Propuesta",
+  },
+  {
+    value: "won",
+    label: "Ganado",
+  },
+  {
+    value: "lost",
+    label: "Perdido",
+  },
 ];
 
 const SOURCE_OPTIONS = [
-  "WhatsApp",
   "Instagram",
+  "LinkedIn",
   "Web",
+  "Referido",
   "Email",
-  "Referencia",
   "Otro",
 ];
 
-const STATUS_STYLES = {
-  new: {
-    className:
-      "bg-blue-500/10 text-blue-500 border-blue-500/10",
-  },
-  contacted: {
-    className:
-      "bg-gray-500/10 text-[var(--lr-text-secondary)] border-gray-500/10",
-  },
-  proposal: {
-    className:
-      "bg-purple-500/10 text-purple-500 border-purple-500/10",
-  },
-  "follow-up": {
-    className:
-      "bg-[var(--lr-accent-soft)] text-[var(--lr-accent)] border-[var(--lr-accent)]/10",
-  },
-  won: {
-    className:
-      "bg-emerald-500/10 text-emerald-500 border-emerald-500/10",
-  },
-  lost: {
-    className:
-      "bg-red-500/10 text-red-500 border-red-500/10",
-  },
-};
+function formatCurrency(value) {
+  return new Intl.NumberFormat("es-ES", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0);
+}
 
-function formatCurrency(value, language) {
-  const localeMap = {
-    es: "es-ES",
-    eu: "eu-ES",
-    en: "en-US",
-    fr: "fr-FR",
-    de: "de-DE",
-    pt: "pt-PT",
-    it: "it-IT",
-    ja: "ja-JP",
-    zh: "zh-CN",
-  };
+function formatDate(date) {
+  if (!date) return "—";
 
-  return new Intl.NumberFormat(
-    localeMap[language] || "en-US",
-    {
-      style: "currency",
-      currency: "EUR",
-      maximumFractionDigits: 0,
-    }
-  ).format(Number(value || 0));
+  const parsed = new Date(`${date}T12:00:00`);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return date;
+  }
+
+  return new Intl.DateTimeFormat("es-ES", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(parsed);
 }
 
 function getInitials(name = "") {
@@ -102,159 +93,173 @@ function getInitials(name = "") {
     .toUpperCase();
 }
 
-function formatDate(date, language) {
-  if (!date) return "—";
+function getStatusStyles(status) {
+  switch (status) {
+    case "won":
+      return "bg-emerald-500/10 text-emerald-500";
 
-  const localeMap = {
-    es: "es-ES",
-    eu: "eu-ES",
-    en: "en-US",
-    fr: "fr-FR",
-    de: "de-DE",
-    pt: "pt-PT",
-    it: "it-IT",
-    ja: "ja-JP",
-    zh: "zh-CN",
-  };
+    case "lost":
+      return "bg-red-500/10 text-red-500";
 
-  return new Intl.DateTimeFormat(
-    localeMap[language] || "en-US",
-    {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }
-  ).format(new Date(`${date}T12:00:00`));
+    case "proposal":
+      return "bg-purple-500/10 text-purple-500";
+
+    case "follow-up":
+      return "bg-amber-500/10 text-amber-500";
+
+    case "contacted":
+      return "bg-blue-500/10 text-blue-500";
+
+    default:
+      return "bg-[var(--lr-bg-soft)] text-[var(--lr-text-secondary)]";
+  }
+}
+
+function getStatusLabel(status) {
+  return (
+    STATUS_OPTIONS.find(
+      (option) => option.value === status
+    )?.label || status
+  );
 }
 
 function getToday() {
   return new Date().toISOString().split("T")[0];
 }
 
-const EMPTY_FORM = {
-  name: "",
-  company: "",
-  service: "",
-  value: "",
-  status: "new",
-  source: "WhatsApp",
-  lastContact: getToday(),
-  nextFollowUp: getToday(),
-  email: "",
-  phone: "",
-  notes: "",
-};
-
 function Leads() {
-  const {
-    leads,
-    addLead,
-    updateLead,
-    deleteLead,
-  } = useLeads();
+  const { leads, addLead, updateLead, deleteLead } =
+    useLeads();
 
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("value-desc");
+  const [statusFilter, setStatusFilter] =
+    useState("all");
+  const [sourceFilter, setSourceFilter] =
+    useState("all");
+  const [sortBy, setSortBy] = useState("newest");
 
-  const [modalOpen, setModalOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [selectedLead, setSelectedLead] =
+    useState(null);
+
+  const [form, setForm] = useState({
+    name: "",
+    company: "",
+    service: "",
+    value: "",
+    status: "new",
+    source: "Otro",
+    lastContact: getToday(),
+    nextFollowUp: getToday(),
+    email: "",
+    phone: "",
+    notes: "",
+  });
 
   const filteredLeads = useMemo(() => {
+    let result = [...leads];
+
     const normalizedSearch =
       search.trim().toLowerCase();
 
-    const result = leads.filter((lead) => {
-      const matchesSearch =
-        !normalizedSearch ||
+    if (normalizedSearch) {
+      result = result.filter((lead) =>
         [
           lead.name,
           lead.company,
           lead.service,
           lead.email,
           lead.phone,
+          lead.source,
         ]
           .filter(Boolean)
           .some((value) =>
             String(value)
               .toLowerCase()
               .includes(normalizedSearch)
-          );
+          )
+      );
+    }
 
-      const matchesStatus =
-        statusFilter === "all" ||
-        lead.status === statusFilter;
+    if (statusFilter !== "all") {
+      result = result.filter(
+        (lead) => lead.status === statusFilter
+      );
+    }
 
-      return matchesSearch && matchesStatus;
-    });
+    if (sourceFilter !== "all") {
+      result = result.filter(
+        (lead) => lead.source === sourceFilter
+      );
+    }
 
-    return [...result].sort((a, b) => {
-      if (sortBy === "value-desc") {
+    result.sort((a, b) => {
+      if (sortBy === "value-high") {
         return (
           Number(b.value || 0) -
           Number(a.value || 0)
         );
       }
 
-      if (sortBy === "value-asc") {
+      if (sortBy === "value-low") {
         return (
           Number(a.value || 0) -
           Number(b.value || 0)
         );
       }
 
-      if (sortBy === "newest") {
-        return (
-          new Date(`${b.createdAt}T12:00:00`) -
-          new Date(`${a.createdAt}T12:00:00`)
+      if (sortBy === "name") {
+        return String(a.name || "").localeCompare(
+          String(b.name || "")
         );
       }
 
       if (sortBy === "follow-up") {
-        return (
-          new Date(`${a.nextFollowUp}T12:00:00`) -
-          new Date(`${b.nextFollowUp}T12:00:00`)
+        return String(
+          a.nextFollowUp || "9999-12-31"
+        ).localeCompare(
+          String(b.nextFollowUp || "9999-12-31")
         );
       }
 
-      return 0;
-    });
-  }, [leads, search, statusFilter, sortBy]);
-
-  const totalValue = useMemo(() => {
-    return filteredLeads
-      .filter((lead) => lead.status !== "lost")
-      .reduce(
-        (total, lead) =>
-          total + Number(lead.value || 0),
-        0
+      return String(b.createdAt || "").localeCompare(
+        String(a.createdAt || "")
       );
-  }, [filteredLeads]);
+    });
 
-  const hotCount = useMemo(() => {
-    return filteredLeads.filter(
-      (lead) =>
-        lead.status === "proposal" ||
-        lead.status === "follow-up"
-    ).length;
-  }, [filteredLeads]);
+    return result;
+  }, [
+    leads,
+    search,
+    statusFilter,
+    sourceFilter,
+    sortBy,
+  ]);
 
-  const openCreate = () => {
+  const openCreateModal = () => {
     setEditingLead(null);
 
     setForm({
-      ...EMPTY_FORM,
+      name: "",
+      company: "",
+      service: "",
+      value: "",
+      status: "new",
+      source: "Otro",
       lastContact: getToday(),
       nextFollowUp: getToday(),
+      email: "",
+      phone: "",
+      notes: "",
     });
 
-    setModalOpen(true);
+    setShowModal(true);
   };
 
-  const openEdit = (lead) => {
+  const openEditModal = (lead) => {
     setEditingLead(lead);
 
     setForm({
@@ -273,33 +278,31 @@ function Leads() {
       notes: lead.notes || "",
     });
 
-    setModalOpen(true);
+    setShowModal(true);
   };
 
   const closeModal = () => {
-    setModalOpen(false);
+    setShowModal(false);
     setEditingLead(null);
-    setForm(EMPTY_FORM);
-  };
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-
-    setForm((current) => ({
-      ...current,
-      [name]: value,
-    }));
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!form.name.trim()) return;
+    if (!form.name.trim()) {
+      return;
+    }
 
     if (editingLead) {
-      updateLead(editingLead.id, form);
+      updateLead(editingLead.id, {
+        ...form,
+        value: Number(form.value) || 0,
+      });
     } else {
-      addLead(form);
+      addLead({
+        ...form,
+        value: Number(form.value) || 0,
+      });
     }
 
     closeModal();
@@ -307,313 +310,659 @@ function Leads() {
 
   const handleDelete = (lead) => {
     const confirmed = window.confirm(
-      `${t.leads.deleteConfirm} ${lead.name}?`
+      `¿Seguro que quieres eliminar a ${lead.name}?`
     );
 
-    if (confirmed) {
-      deleteLead(lead.id);
+    if (!confirmed) {
+      return;
+    }
+
+    deleteLead(lead.id);
+
+    if (selectedLead?.id === lead.id) {
+      setSelectedLead(null);
     }
   };
 
+  const totalPipeline = leads
+    .filter((lead) => lead.status !== "lost")
+    .reduce(
+      (total, lead) =>
+        total + Number(lead.value || 0),
+      0
+    );
+
+  const wonValue = leads
+    .filter((lead) => lead.status === "won")
+    .reduce(
+      (total, lead) =>
+        total + Number(lead.value || 0),
+      0
+    );
+
+  const activeLeads = leads.filter(
+    (lead) =>
+      lead.status !== "won" &&
+      lead.status !== "lost"
+  ).length;
+
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-7">
 
         {/* HEADER */}
 
-        <section className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+        <section className="relative overflow-hidden rounded-[28px] border border-[var(--lr-border)] bg-[var(--lr-card)] p-6 shadow-[0_20px_80px_rgba(0,0,0,0.06)] sm:p-8">
 
-          <div>
+          <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[var(--lr-accent)]/10 blur-3xl" />
 
-            <div className="mb-3 flex items-center gap-2">
+          <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
 
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--lr-accent)]" />
+            <div>
 
-              <span className="text-[12px] font-bold uppercase tracking-[0.18em] text-[var(--lr-text-muted)]">
-                {t.leads.management}
-              </span>
+              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--lr-accent)]">
+                <User size={14} />
+                Lead management
+              </div>
+
+              <h1 className="mt-3 text-3xl font-black tracking-[-0.045em] text-[var(--lr-text)]">
+                Tus leads
+              </h1>
+
+              <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--lr-text-secondary)]">
+                Gestiona tus oportunidades y mantén
+                cada conversación bajo control.
+              </p>
 
             </div>
 
-            <h2 className="text-3xl font-bold tracking-[-0.04em] text-[var(--lr-text)]">
-              {t.leads.title}
-            </h2>
-
-            <p className="mt-2 max-w-xl text-[15px] leading-5 text-[var(--lr-text-secondary)]">
-              {t.leads.description}
-            </p>
+            <button
+              type="button"
+              onClick={openCreateModal}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--lr-text)] px-5 text-xs font-bold text-[var(--lr-bg)] shadow-lg shadow-black/10 transition hover:-translate-y-0.5"
+            >
+              <Plus size={16} />
+              Añadir lead
+            </button>
 
           </div>
 
-          <button
-            type="button"
-            onClick={openCreate}
-            className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--lr-text)] px-5 text-[15px] font-bold text-[var(--lr-bg)] shadow-sm hover:opacity-90"
-          >
-            <Plus size={16} />
-            {t.common.newLead}
-          </button>
+          {/* STATS */}
+
+          <div className="relative mt-8 grid gap-3 sm:grid-cols-3">
+
+            <Metric
+              label="Total leads"
+              value={leads.length}
+              icon={User}
+            />
+
+            <Metric
+              label="Activos"
+              value={activeLeads}
+              icon={Clock3}
+            />
+
+            <Metric
+              label="Pipeline"
+              value={formatCurrency(totalPipeline)}
+              icon={CircleDollarSign}
+            />
+
+          </div>
 
         </section>
 
-        {/* SUMMARY */}
+        {/* FILTERS */}
 
-        <section className="grid gap-3 sm:grid-cols-3">
+        <section className="rounded-2xl border border-[var(--lr-border)] bg-[var(--lr-card)] p-4">
 
-          <SummaryCard
-            icon={UserRound}
-            label={t.leads.showing}
-            value={filteredLeads.length}
-            suffix={
-              filteredLeads.length === 1
-                ? t.leads.lead
-                : t.leads.leads
-            }
-          />
+          <div className="flex flex-col gap-3 lg:flex-row">
 
-          <SummaryCard
-            icon={CircleDollarSign}
-            label={t.leads.visibleValue}
-            value={formatCurrency(
-              totalValue,
-              language
-            )}
-          />
-
-          <SummaryCard
-            icon={MessageCircle}
-            label={t.leads.hotOpportunities}
-            value={hotCount}
-            suffix={t.leads.requireFollowUp}
-            accent
-          />
-
-        </section>
-
-        {/* TOOLBAR */}
-
-        <section className="rounded-[22px] border border-[var(--lr-border)] bg-[var(--lr-card-solid)] p-3">
-
-          <div className="flex flex-col gap-3 xl:flex-row">
-
-            <div className="relative flex-1">
+            <div className="relative min-w-0 flex-1">
 
               <Search
                 size={16}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--lr-text-muted)]"
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--lr-text-muted)]"
               />
 
               <input
-                type="text"
                 value={search}
                 onChange={(event) =>
                   setSearch(event.target.value)
                 }
-                placeholder={t.leads.searchPlaceholder}
-                className="h-11 w-full rounded-xl border border-transparent bg-[var(--lr-bg-soft)] pl-10 pr-4 text-[15px] text-[var(--lr-text)] outline-none placeholder:text-[var(--lr-text-muted)] focus:border-[var(--lr-accent)]/30"
+                placeholder="Buscar por nombre, empresa, email..."
+                className="h-11 w-full rounded-xl border border-[var(--lr-border)] bg-[var(--lr-bg-soft)] pl-11 pr-4 text-xs text-[var(--lr-text)] outline-none transition placeholder:text-[var(--lr-text-muted)] focus:border-[var(--lr-border-strong)]"
               />
 
             </div>
 
-            <div className="flex gap-2">
+            <Select
+              value={statusFilter}
+              onChange={setStatusFilter}
+              icon={Filter}
+              options={[
+                {
+                  value: "all",
+                  label: "Todos los estados",
+                },
+                ...STATUS_OPTIONS,
+              ]}
+            />
 
-              <div className="relative flex-1 sm:flex-none">
+            <Select
+              value={sourceFilter}
+              onChange={setSourceFilter}
+              icon={Building2}
+              options={[
+                {
+                  value: "all",
+                  label: "Todas las fuentes",
+                },
+                ...SOURCE_OPTIONS.map((source) => ({
+                  value: source,
+                  label: source,
+                })),
+              ]}
+            />
 
-                <Filter
-                  size={14}
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--lr-text-muted)]"
-                />
-
-                <select
-                  value={statusFilter}
-                  onChange={(event) =>
-                    setStatusFilter(event.target.value)
-                  }
-                  className="h-11 w-full appearance-none rounded-xl border border-[var(--lr-border)] bg-[var(--lr-card)] pl-9 pr-9 text-[14px] font-semibold text-[var(--lr-text-secondary)] outline-none focus:border-[var(--lr-accent)]/30 sm:w-[170px]"
-                >
-
-                  <option value="all">
-                    {t.leads.allStatuses}
-                  </option>
-
-                  {STATUS_VALUES.map((status) => (
-                    <option
-                      key={status}
-                      value={status}
-                    >
-                      {t.leads.statuses[status]}
-                    </option>
-                  ))}
-
-                </select>
-
-                <ChevronDown
-                  size={13}
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--lr-text-muted)]"
-                />
-
-              </div>
-
-              <div className="relative flex-1 sm:flex-none">
-
-                <ArrowDownUp
-                  size={14}
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--lr-text-muted)]"
-                />
-
-                <select
-                  value={sortBy}
-                  onChange={(event) =>
-                    setSortBy(event.target.value)
-                  }
-                  className="h-11 w-full appearance-none rounded-xl border border-[var(--lr-border)] bg-[var(--lr-card)] pl-9 pr-9 text-[14px] font-semibold text-[var(--lr-text-secondary)] outline-none focus:border-[var(--lr-accent)]/30 sm:w-[170px]"
-                >
-
-                  <option value="value-desc">
-                    {t.leads.sortHighestValue}
-                  </option>
-
-                  <option value="value-asc">
-                    {t.leads.sortLowestValue}
-                  </option>
-
-                  <option value="newest">
-                    {t.leads.sortNewest}
-                  </option>
-
-                  <option value="follow-up">
-                    {t.leads.sortNextFollowUp}
-                  </option>
-
-                </select>
-
-                <ChevronDown
-                  size={13}
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--lr-text-muted)]"
-                />
-
-              </div>
-
-            </div>
+            <Select
+              value={sortBy}
+              onChange={setSortBy}
+              icon={ArrowDownUp}
+              options={[
+                {
+                  value: "newest",
+                  label: "Más recientes",
+                },
+                {
+                  value: "value-high",
+                  label: "Mayor valor",
+                },
+                {
+                  value: "value-low",
+                  label: "Menor valor",
+                },
+                {
+                  value: "follow-up",
+                  label: "Próximo follow-up",
+                },
+                {
+                  value: "name",
+                  label: "Nombre",
+                },
+              ]}
+            />
 
           </div>
 
         </section>
 
-        {/* LEADS */}
+        {/* LIST */}
 
-        {filteredLeads.length > 0 ? (
+        <section className="space-y-3">
 
-          <section className="grid gap-3 xl:grid-cols-2">
+          {filteredLeads.length === 0 ? (
 
-            {filteredLeads.map((lead) => (
+            <div className="rounded-2xl border border-dashed border-[var(--lr-border)] bg-[var(--lr-card)] px-6 py-14 text-center">
 
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--lr-bg-soft)] text-[var(--lr-text-muted)]">
+                <User size={20} />
+              </div>
+
+              <h3 className="mt-4 text-sm font-bold text-[var(--lr-text)]">
+                No hay leads
+              </h3>
+
+              <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-[var(--lr-text-secondary)]">
+                {leads.length === 0
+                  ? "Añade tu primer lead para empezar a gestionar tu pipeline."
+                  : "No encontramos leads que coincidan con tus filtros."}
+              </p>
+
+              {leads.length === 0 && (
+                <button
+                  type="button"
+                  onClick={openCreateModal}
+                  className="mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-[var(--lr-text)] px-4 text-xs font-bold text-[var(--lr-bg)]"
+                >
+                  <Plus size={15} />
+                  Añadir lead
+                </button>
+              )}
+
+            </div>
+
+          ) : (
+
+            filteredLeads.map((lead) => (
               <LeadItem
                 key={lead.id}
                 lead={lead}
-                onEdit={openEdit}
+                onEdit={openEditModal}
                 onDelete={handleDelete}
-                language={language}
-                t={t}
+                onView={setSelectedLead}
               />
+            ))
 
-            ))}
+          )}
+
+        </section>
+
+        {/* WON VALUE */}
+
+        {wonValue > 0 && (
+          <section className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+
+            <div className="flex items-center gap-3">
+
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                <Check size={17} />
+              </div>
+
+              <div>
+                <p className="text-xs font-bold text-[var(--lr-text)]">
+                  Revenue ganado
+                </p>
+
+                <p className="mt-0.5 text-[11px] text-[var(--lr-text-secondary)]">
+                  {formatCurrency(wonValue)} en
+                  oportunidades cerradas.
+                </p>
+              </div>
+
+            </div>
 
           </section>
-
-        ) : (
-
-          <EmptyLeads
-            hasFilters={
-              Boolean(search.trim()) ||
-              statusFilter !== "all"
-            }
-            onCreate={openCreate}
-            onClear={() => {
-              setSearch("");
-              setStatusFilter("all");
-            }}
-            t={t}
-          />
-
         )}
 
       </div>
 
       {/* MODAL */}
 
-      {modalOpen && (
+      {showModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
 
-        <LeadModal
-          form={form}
-          editingLead={editingLead}
-          onChange={handleChange}
-          onSubmit={handleSubmit}
-          onClose={closeModal}
-          t={t}
-        />
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[28px] border border-[var(--lr-border)] bg-[var(--lr-card)] shadow-2xl">
 
-      )}
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[var(--lr-border)] bg-[var(--lr-card)] px-6 py-5">
 
-    </Layout>
-  );
-}
+              <div>
 
-function SummaryCard({
-  icon: Icon,
-  label,
-  value,
-  suffix,
-  accent = false,
-}) {
-  return (
-    <div
-      className={[
-        "rounded-[20px] border p-4",
-        accent
-          ? "border-[var(--lr-accent)]/15 bg-[var(--lr-accent-soft)]"
-          : "border-[var(--lr-border)] bg-[var(--lr-card-solid)]",
-      ].join(" ")}
-    >
+                <h2 className="text-lg font-black tracking-[-0.025em] text-[var(--lr-text)]">
+                  {editingLead
+                    ? "Editar lead"
+                    : "Nuevo lead"}
+                </h2>
 
-      <div className="flex items-center gap-3">
+                <p className="mt-1 text-[11px] text-[var(--lr-text-muted)]">
+                  Completa la información de la
+                  oportunidad.
+                </p>
 
-        <div
-          className={[
-            "flex h-9 w-9 items-center justify-center rounded-xl",
-            accent
-              ? "bg-[var(--lr-accent)] text-white"
-              : "bg-[var(--lr-bg-soft)] text-[var(--lr-text-secondary)]",
-          ].join(" ")}
-        >
-          <Icon size={16} />
-        </div>
+              </div>
 
-        <div>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--lr-text-muted)] hover:bg-[var(--lr-bg-soft)] hover:text-[var(--lr-text)]"
+              >
+                <X size={18} />
+              </button>
 
-          <p className="text-[12px] font-medium text-[var(--lr-text-muted)]">
-            {label}
-          </p>
+            </div>
 
-          <div className="mt-0.5 flex items-baseline gap-1.5">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5 p-6"
+            >
 
-            <span className="text-lg font-bold tracking-[-0.03em] text-[var(--lr-text)]">
-              {value}
-            </span>
+              <div className="grid gap-4 sm:grid-cols-2">
 
-            {suffix && (
-              <span className="text-[12px] text-[var(--lr-text-muted)]">
-                {suffix}
-              </span>
-            )}
+                <Input
+                  label="Nombre"
+                  required
+                  value={form.name}
+                  onChange={(value) =>
+                    setForm((current) => ({
+                      ...current,
+                      name: value,
+                    }))
+                  }
+                  placeholder="Ej. Ana García"
+                />
+
+                <Input
+                  label="Empresa"
+                  value={form.company}
+                  onChange={(value) =>
+                    setForm((current) => ({
+                      ...current,
+                      company: value,
+                    }))
+                  }
+                  placeholder="Ej. Acme"
+                />
+
+                <Input
+                  label="Servicio"
+                  value={form.service}
+                  onChange={(value) =>
+                    setForm((current) => ({
+                      ...current,
+                      service: value,
+                    }))
+                  }
+                  placeholder="Ej. Gestión de redes"
+                />
+
+                <Input
+                  label="Valor"
+                  type="number"
+                  value={form.value}
+                  onChange={(value) =>
+                    setForm((current) => ({
+                      ...current,
+                      value,
+                    }))
+                  }
+                  placeholder="2500"
+                />
+
+                <SelectField
+                  label="Estado"
+                  value={form.status}
+                  onChange={(value) =>
+                    setForm((current) => ({
+                      ...current,
+                      status: value,
+                    }))
+                  }
+                  options={STATUS_OPTIONS}
+                />
+
+                <SelectField
+                  label="Fuente"
+                  value={form.source}
+                  onChange={(value) =>
+                    setForm((current) => ({
+                      ...current,
+                      source: value,
+                    }))
+                  }
+                  options={SOURCE_OPTIONS.map((source) => ({
+                    value: source,
+                    label: source,
+                  }))}
+                />
+
+                <Input
+                  label="Último contacto"
+                  type="date"
+                  value={form.lastContact}
+                  onChange={(value) =>
+                    setForm((current) => ({
+                      ...current,
+                      lastContact: value,
+                    }))
+                  }
+                />
+
+                <Input
+                  label="Próximo follow-up"
+                  type="date"
+                  value={form.nextFollowUp}
+                  onChange={(value) =>
+                    setForm((current) => ({
+                      ...current,
+                      nextFollowUp: value,
+                    }))
+                  }
+                />
+
+                <Input
+                  label="Email"
+                  type="email"
+                  value={form.email}
+                  onChange={(value) =>
+                    setForm((current) => ({
+                      ...current,
+                      email: value,
+                    }))
+                  }
+                  placeholder="cliente@email.com"
+                />
+
+                <Input
+                  label="Teléfono"
+                  value={form.phone}
+                  onChange={(value) =>
+                    setForm((current) => ({
+                      ...current,
+                      phone: value,
+                    }))
+                  }
+                  placeholder="+34..."
+                />
+
+              </div>
+
+              <div>
+
+                <label className="mb-2 block text-[11px] font-bold text-[var(--lr-text-secondary)]">
+                  Notas
+                </label>
+
+                <textarea
+                  value={form.notes}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      notes: event.target.value,
+                    }))
+                  }
+                  rows={4}
+                  placeholder="Información importante sobre este lead..."
+                  className="w-full resize-none rounded-xl border border-[var(--lr-border)] bg-[var(--lr-bg-soft)] px-4 py-3 text-xs text-[var(--lr-text)] outline-none placeholder:text-[var(--lr-text-muted)] focus:border-[var(--lr-border-strong)]"
+                />
+
+              </div>
+
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="h-11 rounded-xl border border-[var(--lr-border)] px-5 text-xs font-bold text-[var(--lr-text-secondary)] hover:bg-[var(--lr-bg-soft)]"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className="h-11 rounded-xl bg-[var(--lr-text)] px-6 text-xs font-bold text-[var(--lr-bg)]"
+                >
+                  {editingLead
+                    ? "Guardar cambios"
+                    : "Crear lead"}
+                </button>
+
+              </div>
+
+            </form>
 
           </div>
 
         </div>
+      )}
 
-      </div>
+      {/* DETAILS */}
 
-    </div>
+      {selectedLead && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+
+          <div className="w-full max-w-lg rounded-[28px] border border-[var(--lr-border)] bg-[var(--lr-card)] shadow-2xl">
+
+            <div className="flex items-center justify-between border-b border-[var(--lr-border)] px-6 py-5">
+
+              <div className="flex items-center gap-3">
+
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--lr-bg-soft)] text-xs font-black text-[var(--lr-text-secondary)]">
+                  {getInitials(selectedLead.name)}
+                </div>
+
+                <div>
+
+                  <h2 className="text-sm font-black text-[var(--lr-text)]">
+                    {selectedLead.name}
+                  </h2>
+
+                  <p className="mt-0.5 text-[11px] text-[var(--lr-text-muted)]">
+                    {selectedLead.company ||
+                      "Sin empresa"}
+                  </p>
+
+                </div>
+
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedLead(null)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--lr-text-muted)] hover:bg-[var(--lr-bg-soft)]"
+              >
+                <X size={18} />
+              </button>
+
+            </div>
+
+            <div className="space-y-5 p-6">
+
+              <div className="flex items-center justify-between">
+
+                <span
+                  className={`rounded-full px-3 py-1 text-[10px] font-bold ${getStatusStyles(
+                    selectedLead.status
+                  )}`}
+                >
+                  {getStatusLabel(
+                    selectedLead.status
+                  )}
+                </span>
+
+                <span className="text-xl font-black tracking-[-0.03em] text-[var(--lr-text)]">
+                  {formatCurrency(
+                    selectedLead.value
+                  )}
+                </span>
+
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+
+                <Detail
+                  icon={Building2}
+                  label="Servicio"
+                  value={
+                    selectedLead.service ||
+                    "Sin servicio"
+                  }
+                />
+
+                <Detail
+                  icon={Building2}
+                  label="Fuente"
+                  value={
+                    selectedLead.source ||
+                    "Sin fuente"
+                  }
+                />
+
+                <Detail
+                  icon={Mail}
+                  label="Email"
+                  value={
+                    selectedLead.email ||
+                    "Sin email"
+                  }
+                />
+
+                <Detail
+                  icon={Phone}
+                  label="Teléfono"
+                  value={
+                    selectedLead.phone ||
+                    "Sin teléfono"
+                  }
+                />
+
+                <Detail
+                  icon={CalendarDays}
+                  label="Último contacto"
+                  value={formatDate(
+                    selectedLead.lastContact
+                  )}
+                />
+
+                <Detail
+                  icon={Clock3}
+                  label="Próximo follow-up"
+                  value={formatDate(
+                    selectedLead.nextFollowUp
+                  )}
+                />
+
+              </div>
+
+              {selectedLead.notes && (
+                <div className="rounded-2xl bg-[var(--lr-bg-soft)] p-4">
+
+                  <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--lr-text-muted)]">
+                    Notas
+                  </p>
+
+                  <p className="mt-2 text-xs leading-5 text-[var(--lr-text-secondary)]">
+                    {selectedLead.notes}
+                  </p>
+
+                </div>
+              )}
+
+              <div className="flex gap-2">
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedLead(null);
+                    openEditModal(selectedLead);
+                  }}
+                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--lr-text)] text-xs font-bold text-[var(--lr-bg)]"
+                >
+                  <Edit3 size={15} />
+                  Editar
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleDelete(selectedLead)
+                  }
+                  className="flex h-11 items-center justify-center gap-2 rounded-xl border border-red-500/20 px-4 text-xs font-bold text-red-500 hover:bg-red-500/10"
+                >
+                  <Trash2 size={15} />
+                  Eliminar
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
+
+    </Layout>
   );
 }
 
@@ -621,46 +970,20 @@ function LeadItem({
   lead,
   onEdit,
   onDelete,
-  language,
-  t,
+  onView,
 }) {
-  const status =
-    STATUS_STYLES[lead.status] ||
-    STATUS_STYLES.new;
-
-  const today = getToday();
-
-  const isDue =
-    lead.nextFollowUp &&
-    lead.nextFollowUp <= today &&
-    lead.status !== "won" &&
-    lead.status !== "lost";
-
   return (
-    <article className="group overflow-hidden rounded-[22px] border border-[var(--lr-border)] bg-[var(--lr-card-solid)] transition duration-200 hover:-translate-y-0.5 hover:border-[var(--lr-border-strong)] hover:shadow-xl hover:shadow-black/5">
+    <article className="group rounded-2xl border border-[var(--lr-border)] bg-[var(--lr-card)] p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/5 sm:p-5">
 
-      <div className="p-5">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
 
-        <div className="flex items-start gap-4">
+        <div className="flex min-w-0 flex-1 items-center gap-4">
 
-          {/* AVATAR */}
-
-          <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[var(--lr-bg-soft)] text-[13px] font-bold text-[var(--lr-text-secondary)]">
-
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--lr-bg-soft)] text-xs font-black text-[var(--lr-text-secondary)]">
             {getInitials(lead.name)}
-
-            {(lead.status === "proposal" ||
-              lead.status === "follow-up") && (
-
-              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--lr-card-solid)] bg-[var(--lr-accent)]" />
-
-            )}
-
           </div>
 
-          {/* INFO */}
-
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0">
 
             <div className="flex flex-wrap items-center gap-2">
 
@@ -669,32 +992,36 @@ function LeadItem({
               </h3>
 
               <span
-                className={[
-                  "rounded-full border px-2 py-0.5 text-[12px] font-bold",
-                  status.className,
-                ].join(" ")}
+                className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${getStatusStyles(
+                  lead.status
+                )}`}
               >
-                {t.leads.statuses[lead.status] ||
-                  t.leads.statuses.new}
+                {getStatusLabel(lead.status)}
               </span>
 
             </div>
 
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <p className="mt-1 truncate text-xs text-[var(--lr-text-secondary)]">
+              {lead.service ||
+                "Sin servicio"}
 
-              {lead.company && (
-                <span className="flex items-center gap-1 text-[12px] text-[var(--lr-text-muted)]">
+              {lead.company
+                ? ` · ${lead.company}`
+                : ""}
+            </p>
 
-                  <BriefcaseBusiness size={11} />
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
 
-                  {lead.company}
+              <span className="text-[10px] text-[var(--lr-text-muted)]">
+                {lead.source || "Sin fuente"}
+              </span>
 
-                </span>
-              )}
-
-              {lead.service && (
-                <span className="text-[12px] text-[var(--lr-text-muted)]">
-                  {lead.service}
+              {lead.nextFollowUp && (
+                <span className="flex items-center gap-1 text-[10px] text-[var(--lr-text-muted)]">
+                  <CalendarDays size={11} />
+                  {formatDate(
+                    lead.nextFollowUp
+                  )}
                 </span>
               )}
 
@@ -702,131 +1029,49 @@ function LeadItem({
 
           </div>
 
-          {/* VALUE */}
+        </div>
 
-          <div className="shrink-0 text-right">
+        <div className="flex items-center justify-between gap-4 xl:w-[250px] xl:justify-end">
 
-            <p className="text-base font-bold tracking-[-0.025em] text-[var(--lr-text)]">
-              {formatCurrency(
-                lead.value,
-                language
-              )}
+          <div className="text-left xl:text-right">
+
+            <p className="text-sm font-black tracking-[-0.02em] text-[var(--lr-text)]">
+              {formatCurrency(lead.value)}
             </p>
 
-            <p className="mt-0.5 text-[12px] uppercase tracking-[0.08em] text-[var(--lr-text-muted)]">
-              {t.leads.opportunity}
+            <p className="mt-0.5 text-[10px] text-[var(--lr-text-muted)]">
+              {lead.email || "Sin email"}
             </p>
 
           </div>
 
-        </div>
+          <div className="flex items-center gap-1">
 
-        {/* DETAILS */}
+            <button
+              type="button"
+              onClick={() => onView(lead)}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--lr-text-muted)] hover:bg-[var(--lr-bg-soft)] hover:text-[var(--lr-text)]"
+              title="Ver detalles"
+            >
+              <MoreHorizontal size={16} />
+            </button>
 
-        <div className="mt-5 grid gap-2 border-t border-[var(--lr-border)] pt-4 sm:grid-cols-3">
-
-          <InfoItem
-            icon={CalendarDays}
-            label={t.leads.followUp}
-            value={
-              lead.nextFollowUp
-                ? formatDate(
-                    lead.nextFollowUp,
-                    language
-                  )
-                : t.leads.noDate
-            }
-            danger={isDue}
-          />
-
-          <InfoItem
-            icon={MessageCircle}
-            label={t.leads.source}
-            value={
-              lead.source
-                ? getSourceLabel(
-                    lead.source,
-                    t
-                  )
-                : getSourceLabel(
-                    "Otro",
-                    t
-                  )
-            }
-          />
-
-          <InfoItem
-            icon={Clock3}
-            label={t.leads.lastContact}
-            value={
-              lead.lastContact
-                ? formatDate(
-                    lead.lastContact,
-                    language
-                  )
-                : t.leads.noRecord
-            }
-          />
-
-        </div>
-
-        {/* ACTIONS */}
-
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-
-          <button
-            type="button"
-            onClick={() => onEdit(lead)}
-            className="flex h-8 items-center gap-1.5 rounded-lg bg-[var(--lr-text)] px-3 text-[12px] font-bold text-[var(--lr-bg)] hover:opacity-90"
-          >
-            <Pencil size={12} />
-            {t.leads.edit}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onEdit(lead)}
-            className="flex h-8 items-center gap-1.5 rounded-lg border border-[var(--lr-border)] bg-[var(--lr-card)] px-3 text-[12px] font-semibold text-[var(--lr-text-secondary)] hover:bg-[var(--lr-card-hover)] hover:text-[var(--lr-text)]"
-          >
-            {t.leads.viewDetails}
-            <ArrowRight size={11} />
-          </button>
-
-          <div className="ml-auto flex items-center gap-1.5">
-
-            {lead.phone && (
-              <a
-                href={`tel:${lead.phone}`}
-                onClick={(event) =>
-                  event.stopPropagation()
-                }
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--lr-border)] bg-[var(--lr-card)] text-[var(--lr-text-muted)] hover:text-[var(--lr-text)]"
-                title={t.leads.call}
-              >
-                <Phone size={13} />
-              </a>
-            )}
-
-            {lead.email && (
-              <a
-                href={`mailto:${lead.email}`}
-                onClick={(event) =>
-                  event.stopPropagation()
-                }
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--lr-border)] bg-[var(--lr-card)] text-[var(--lr-text-muted)] hover:text-[var(--lr-text)]"
-                title={t.leads.email}
-              >
-                <Mail size={13} />
-              </a>
-            )}
+            <button
+              type="button"
+              onClick={() => onEdit(lead)}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--lr-text-muted)] hover:bg-[var(--lr-bg-soft)] hover:text-[var(--lr-text)]"
+              title="Editar"
+            >
+              <Edit3 size={15} />
+            </button>
 
             <button
               type="button"
               onClick={() => onDelete(lead)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--lr-text-muted)] hover:border-red-500/10 hover:bg-red-500/10 hover:text-red-500"
-              title={t.leads.delete}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--lr-text-muted)] hover:bg-red-500/10 hover:text-red-500"
+              title="Eliminar"
             >
-              <Trash2 size={13} />
+              <Trash2 size={15} />
             </button>
 
           </div>
@@ -839,409 +1084,187 @@ function LeadItem({
   );
 }
 
-function InfoItem({
-  icon: Icon,
+function Metric({
   label,
   value,
-  danger = false,
+  icon: Icon,
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-xl bg-[var(--lr-bg-soft)] px-3 py-2.5">
+    <div className="rounded-2xl border border-[var(--lr-border)] bg-[var(--lr-bg-soft)] p-4">
 
-      <Icon
-        size={13}
-        className={
-          danger
-            ? "text-red-500"
-            : "text-[var(--lr-text-muted)]"
-        }
-      />
+      <div className="flex items-center justify-between gap-3">
 
-      <div className="min-w-0">
-
-        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--lr-text-muted)]">
+        <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--lr-text-muted)]">
           {label}
         </p>
 
-        <p
-          className={[
-            "mt-0.5 truncate text-[12px] font-semibold",
-            danger
-              ? "text-red-500"
-              : "text-[var(--lr-text-secondary)]",
-          ].join(" ")}
-        >
-          {value}
-        </p>
-
-      </div>
-
-    </div>
-  );
-}
-
-function EmptyLeads({
-  hasFilters,
-  onCreate,
-  onClear,
-  t,
-}) {
-  return (
-    <section className="flex min-h-[360px] flex-col items-center justify-center rounded-[24px] border border-dashed border-[var(--lr-border)] bg-[var(--lr-card-solid)] px-6 text-center">
-
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--lr-accent-soft)] text-[var(--lr-accent)]">
-        <UserRound size={23} />
-      </div>
-
-      <h3 className="mt-5 text-sm font-bold text-[var(--lr-text)]">
-        {hasFilters
-          ? t.leads.noLeadsFound
-          : t.leads.emptyPipeline}
-      </h3>
-
-      <p className="mt-2 max-w-sm text-[14px] leading-5 text-[var(--lr-text-muted)]">
-        {hasFilters
-          ? t.leads.noLeadsFoundDescription
-          : t.leads.emptyPipelineDescription}
-      </p>
-
-      {hasFilters ? (
-
-        <button
-          type="button"
-          onClick={onClear}
-          className="mt-5 rounded-xl border border-[var(--lr-border)] bg-[var(--lr-card)] px-4 py-2.5 text-[13px] font-bold text-[var(--lr-text-secondary)] hover:bg-[var(--lr-card-hover)]"
-        >
-          {t.leads.clearFilters}
-        </button>
-
-      ) : (
-
-        <button
-          type="button"
-          onClick={onCreate}
-          className="mt-5 flex items-center gap-2 rounded-xl bg-[var(--lr-text)] px-4 py-2.5 text-[13px] font-bold text-[var(--lr-bg)] hover:opacity-90"
-        >
-          <Plus size={13} />
-          {t.leads.addFirstLead}
-        </button>
-
-      )}
-
-    </section>
-  );
-}
-
-function LeadModal({
-  form,
-  editingLead,
-  onChange,
-  onSubmit,
-  onClose,
-  t,
-}) {
-  const statusOptions = STATUS_VALUES.map(
-    (value) => ({
-      value,
-      label: t.leads.statuses[value],
-    })
-  );
-
-  const sourceOptions = SOURCE_OPTIONS.map(
-    (source) => ({
-      value: source,
-      label: getSourceLabel(source, t),
-    })
-  );
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md">
-
-      <div className="max-h-[92vh] w-full max-w-2xl overflow-hidden rounded-[26px] border border-[var(--lr-border)] bg-[var(--lr-card-solid)] shadow-2xl shadow-black/30">
-
-        {/* MODAL HEADER */}
-
-        <div className="flex items-center justify-between border-b border-[var(--lr-border)] px-5 py-4 sm:px-6">
-
-          <div>
-
-            <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[var(--lr-accent)]">
-              {editingLead
-                ? t.leads.editOpportunity
-                : t.leads.newOpportunity}
-            </p>
-
-            <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-[var(--lr-text)]">
-              {editingLead
-                ? editingLead.name
-                : t.leads.addLead}
-            </h2>
-
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--lr-border)] text-[var(--lr-text-muted)] hover:bg-[var(--lr-card)] hover:text-[var(--lr-text)]"
-          >
-            <X size={17} />
-          </button>
-
-        </div>
-
-        {/* FORM */}
-
-        <form
-          onSubmit={onSubmit}
-          className="max-h-[calc(92vh-78px)] overflow-y-auto p-5 sm:p-6"
-        >
-
-          <div className="grid gap-4 sm:grid-cols-2">
-
-            <Field
-              label={t.leads.fields.name}
-              name="name"
-              value={form.name}
-              onChange={onChange}
-              placeholder={t.leads.placeholders.name}
-              required
-            />
-
-            <Field
-              label={t.leads.fields.company}
-              name="company"
-              value={form.company}
-              onChange={onChange}
-              placeholder={t.leads.placeholders.company}
-            />
-
-            <Field
-              label={t.leads.fields.service}
-              name="service"
-              value={form.service}
-              onChange={onChange}
-              placeholder={t.leads.placeholders.service}
-            />
-
-            <Field
-              label={t.leads.fields.value}
-              name="value"
-              value={form.value}
-              onChange={onChange}
-              placeholder={t.leads.placeholders.value}
-              type="number"
-              min="0"
-              icon="€"
-            />
-
-            <SelectField
-              label={t.leads.fields.status}
-              name="status"
-              value={form.status}
-              onChange={onChange}
-              options={statusOptions}
-            />
-
-            <SelectField
-              label={t.leads.fields.source}
-              name="source"
-              value={form.source}
-              onChange={onChange}
-              options={sourceOptions}
-            />
-
-            <Field
-              label={t.leads.fields.lastContact}
-              name="lastContact"
-              value={form.lastContact}
-              onChange={onChange}
-              type="date"
-            />
-
-            <Field
-              label={t.leads.fields.nextFollowUp}
-              name="nextFollowUp"
-              value={form.nextFollowUp}
-              onChange={onChange}
-              type="date"
-            />
-
-            <Field
-              label={t.leads.fields.email}
-              name="email"
-              value={form.email}
-              onChange={onChange}
-              placeholder={t.leads.placeholders.email}
-              type="email"
-            />
-
-            <Field
-              label={t.leads.fields.phone}
-              name="phone"
-              value={form.phone}
-              onChange={onChange}
-              placeholder={t.leads.placeholders.phone}
-            />
-
-          </div>
-
-          <div className="mt-4">
-
-            <label className="block">
-
-              <span className="mb-1.5 block text-[12px] font-bold uppercase tracking-[0.08em] text-[var(--lr-text-secondary)]">
-                {t.leads.fields.notes}
-              </span>
-
-              <textarea
-                name="notes"
-                value={form.notes}
-                onChange={onChange}
-                rows={4}
-                placeholder={t.leads.placeholders.notes}
-                className="w-full resize-none rounded-xl border border-[var(--lr-border)] bg-[var(--lr-bg-soft)] px-3.5 py-3 text-[15px] text-[var(--lr-text)] outline-none placeholder:text-[var(--lr-text-muted)] focus:border-[var(--lr-accent)]/40"
-              />
-
-            </label>
-
-          </div>
-
-          <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="h-10 rounded-xl border border-[var(--lr-border)] bg-[var(--lr-card)] px-5 text-[13px] font-bold text-[var(--lr-text-secondary)] hover:bg-[var(--lr-card-hover)]"
-            >
-              {t.common.cancel}
-            </button>
-
-            <button
-              type="submit"
-              className="flex h-10 items-center justify-center gap-2 rounded-xl bg-[var(--lr-text)] px-5 text-[13px] font-bold text-[var(--lr-bg)] hover:opacity-90"
-            >
-              <Check size={14} />
-
-              {editingLead
-                ? t.leads.saveChanges
-                : t.leads.createLead}
-
-            </button>
-
-          </div>
-
-        </form>
-
-      </div>
-
-    </div>
-  );
-}
-
-function Field({
-  label,
-  name,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-  required = false,
-  min,
-  icon,
-}) {
-  return (
-    <label className="block">
-
-      <span className="mb-1.5 block text-[12px] font-bold uppercase tracking-[0.08em] text-[var(--lr-text-secondary)]">
-        {label}
-      </span>
-
-      <div className="relative">
-
-        {icon && (
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[15px] font-bold text-[var(--lr-text-muted)]">
-            {icon}
-          </span>
-        )}
-
-        <input
-          type={type}
-          name={name}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          required={required}
-          min={min}
-          className={[
-            "h-10 w-full rounded-xl border border-[var(--lr-border)] bg-[var(--lr-bg-soft)] px-3.5 text-[15px] text-[var(--lr-text)] outline-none placeholder:text-[var(--lr-text-muted)] focus:border-[var(--lr-accent)]/40",
-            icon ? "pl-8" : "",
-          ].join(" ")}
+        <Icon
+          size={15}
+          className="text-[var(--lr-text-muted)]"
         />
 
       </div>
 
-    </label>
+      <p className="mt-3 text-xl font-black tracking-[-0.035em] text-[var(--lr-text)]">
+        {value}
+      </p>
+
+    </div>
+  );
+}
+
+function Select({
+  value,
+  onChange,
+  options,
+  icon: Icon,
+}) {
+  return (
+    <div className="relative">
+
+      <Icon
+        size={14}
+        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--lr-text-muted)]"
+      />
+
+      <select
+        value={value}
+        onChange={(event) =>
+          onChange(event.target.value)
+        }
+        className="h-11 min-w-[170px] appearance-none rounded-xl border border-[var(--lr-border)] bg-[var(--lr-bg-soft)] pl-9 pr-9 text-xs font-semibold text-[var(--lr-text)] outline-none focus:border-[var(--lr-border-strong)]"
+      >
+        {options.map((option) => (
+          <option
+            key={option.value}
+            value={option.value}
+          >
+            {option.label}
+          </option>
+        ))}
+      </select>
+
+      <ChevronDown
+        size={14}
+        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--lr-text-muted)]"
+      />
+
+    </div>
+  );
+}
+
+function Input({
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+  required = false,
+}) {
+  return (
+    <div>
+
+      <label className="mb-2 block text-[11px] font-bold text-[var(--lr-text-secondary)]">
+        {label}
+        {required && (
+          <span className="ml-1 text-red-500">
+            *
+          </span>
+        )}
+      </label>
+
+      <input
+        type={type}
+        required={required}
+        value={value}
+        onChange={(event) =>
+          onChange(event.target.value)
+        }
+        placeholder={placeholder}
+        className="h-11 w-full rounded-xl border border-[var(--lr-border)] bg-[var(--lr-bg-soft)] px-4 text-xs text-[var(--lr-text)] outline-none placeholder:text-[var(--lr-text-muted)] focus:border-[var(--lr-border-strong)]"
+      />
+
+    </div>
   );
 }
 
 function SelectField({
   label,
-  name,
   value,
   onChange,
   options,
 }) {
   return (
-    <label className="block">
+    <div>
 
-      <span className="mb-1.5 block text-[12px] font-bold uppercase tracking-[0.08em] text-[var(--lr-text-secondary)]">
+      <label className="mb-2 block text-[11px] font-bold text-[var(--lr-text-secondary)]">
         {label}
-      </span>
+      </label>
 
       <div className="relative">
 
         <select
-          name={name}
           value={value}
-          onChange={onChange}
-          className="h-10 w-full appearance-none rounded-xl border border-[var(--lr-border)] bg-[var(--lr-bg-soft)] px-3.5 pr-9 text-[15px] text-[var(--lr-text)] outline-none focus:border-[var(--lr-accent)]/40"
+          onChange={(event) =>
+            onChange(event.target.value)
+          }
+          className="h-11 w-full appearance-none rounded-xl border border-[var(--lr-border)] bg-[var(--lr-bg-soft)] px-4 pr-10 text-xs text-[var(--lr-text)] outline-none focus:border-[var(--lr-border-strong)]"
         >
+          {options.map((option) => {
+            const item =
+              typeof option === "string"
+                ? {
+                    value: option,
+                    label: option,
+                  }
+                : option;
 
-          {options.map((option) => (
-
-            <option
-              key={option.value}
-              value={option.value}
-            >
-              {option.label}
-            </option>
-
-          ))}
-
+            return (
+              <option
+                key={item.value}
+                value={item.value}
+              >
+                {item.label}
+              </option>
+            );
+          })}
         </select>
 
         <ChevronDown
-          size={13}
+          size={14}
           className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--lr-text-muted)]"
         />
 
       </div>
 
-    </label>
+    </div>
   );
 }
 
-function getSourceLabel(source, t) {
-  const sourceMap = {
-    WhatsApp: t.leads.sources.whatsapp,
-    Instagram: t.leads.sources.instagram,
-    Web: t.leads.sources.web,
-    Email: t.leads.sources.email,
-    Referencia: t.leads.sources.referral,
-    Otro: t.leads.sources.other,
-  };
+function Detail({
+  icon: Icon,
+  label,
+  value,
+}) {
+  return (
+    <div className="rounded-2xl bg-[var(--lr-bg-soft)] p-4">
 
-  return sourceMap[source] || source;
+      <div className="flex items-center gap-2 text-[var(--lr-text-muted)]">
+
+        <Icon size={13} />
+
+        <span className="text-[9px] font-bold uppercase tracking-[0.08em]">
+          {label}
+        </span>
+
+      </div>
+
+      <p className="mt-2 truncate text-xs font-semibold text-[var(--lr-text)]">
+        {value}
+      </p>
+
+    </div>
+  );
 }
 
 export default Leads;
